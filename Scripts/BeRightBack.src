@@ -1,0 +1,12 @@
+message = "be right back"
+i = 1
+while(true)
+    clear_screen
+    print message + "." * i
+    wait(0.5)
+    if i < 3 then
+        i = i + 1
+    else
+        i = 1
+    end if
+end while

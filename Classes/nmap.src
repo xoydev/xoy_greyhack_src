@@ -1,0 +1,59 @@
+NMAP = {}
+
+NMAP.scan = function( ipAddress )
+	if is_valid_ip( ipAddress ) and get_shell.host_computer.is_network_active then
+		DATA = {}
+		DATA.dateOfScan = current_date
+		DATA.ipAddress = ipAddress
+		DATA.isLanIp = is_lan_ip( DATA.ipAddress )
+		
+		//check if ipAddress is local and set the router var
+		if DATA.isLanIp then DATA.router = get_router else DATA.router = get_router( ipAddress )
+		//break and return false if the ip address was not found
+		if DATA.router == null then return false
+		
+		//define raw port list var
+		raw_ports = null
+		
+		//check if local and set raw port list
+		if not DATA.isLanIp then raw_ports = DATA.router.used_ports else raw_ports = DATA.router.device_ports(DATA.ipAddress)
+		//break and return false if the ip address was not found
+		if raw_ports == null then return false
+		
+		//define port list var
+		DATA.ports = []
+		
+		//fill port list
+		for port in raw_ports
+			serviceInfo = DATA.router.port_info(port)
+			lanIp = port.get_lan_ip
+			if port.is_closed and not DATA.isLanIp then portStatus = "open" else portStatus = "closed"
+			
+			INFO = {
+				"portNumber": port.port_number,
+				"serviceInfo": serviceInfo,
+				"lanIp": lanIp,
+				"status": portStatus}
+			
+			DATA.ports = DATA.ports + [INFO]
+		end for
+		
+		return DATA
+	else
+		return false
+	end if
+end function
+
+NMAP.print = function( data )
+	info = "PORT STATE SERVICE VERSION LAN"   
+	print("\nPrinting nmap scan from " + data.dateOfScan)
+	print("Interesting ports on " + data.ipAddress + "\n")
+	if data.ports.len == 0 then
+		print("No open ports.")
+	else
+		for port in data.ports
+			info = info + "\n" + port.portNumber + " " + port.status + " " + port.serviceInfo + " " + port.lanIp
+		end for
+		print(format_columns(info) + "\n")
+	end if
+end function

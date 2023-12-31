@@ -1,0 +1,17 @@
+if params.len != 1 or params[0] == "-h" or params[0] == "--help" then exit("Usage: ipinfo [ip address]\nExample: ipinfo 127.0.0.1")	
+if not is_valid_ip(params[0]) then exit("ipinfo: invalid ip address")
+if not get_shell.host_computer.is_network_active then exit("ipinfo: No internet access.")
+
+ipAddress = params[0]
+
+import_code("/src/nmap.src")
+
+admin = null
+
+if not is_lan_ip(ipAddress) then admin = whois(ipAddress)
+
+data = NMAP.scan(ipAddress)
+if data == false then exit("Error while scanning (check the ip address)!")
+
+if not admin == null then print(admin) else print("No admin data on local addresses!")
+NMAP.print(data)
